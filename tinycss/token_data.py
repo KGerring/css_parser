@@ -16,14 +16,14 @@ import operator
 import re
 import string
 import sys
-
+import regex
 # * Raw strings with the r'' notation are used so that \ do not need
 #   to be escaped.
 # * Names and regexps are separated by a tabulation.
 # * Macros are re-ordered so that only previous definitions are needed.
 # * {} are used for macro substitution with ``string.Formatter``,
 #   so other uses of { or } have been doubled.
-# * The syntax is otherwise compatible with re.compile.
+# * The syntax is otherwise compatible with regex.compile.
 # * Some parentheses were added to add capturing groups.
 #   (in unicode, DIMENSION and URI)
 
@@ -136,17 +136,16 @@ def _init():
     for line in MACROS.splitlines():
         if line.strip():
             name, value = line.split('\t')
-            COMPILED_MACROS[name.strip()] = '(?:%s)' \
-                % value.format(**COMPILED_MACROS)
+            COMPILED_MACROS[name.strip()] = '(?:%s)' % value.format(**COMPILED_MACROS)
 
     COMPILED_TOKEN_REGEXPS[:] = (
         (
             name.strip(),
-            re.compile(
+            regex.compile(
                 value.format(**COMPILED_MACROS),
                 # Case-insensitive when matching eg. uRL(foo)
                 # but preserve the case in extracted groups
-                re.I
+                regex.I| regex.V1
             ).match
         )
         for line in TOKENS.splitlines()
@@ -199,19 +198,19 @@ def _unicode_replace(match, int=int, unichr=unichr, maxunicode=sys.maxunicode):
 
 
 UNICODE_UNESCAPE = functools.partial(
-    re.compile(COMPILED_MACROS['unicode'], re.I).sub,
+    regex.compile(COMPILED_MACROS['unicode'], regex.I|regex.V1).sub,
     _unicode_replace)
 
 NEWLINE_UNESCAPE = functools.partial(
-    re.compile(r'()\\' + COMPILED_MACROS['nl']).sub,
+    regex.compile(r'()\\' + COMPILED_MACROS['nl'] , regex.V1).sub,
     '')
 
 SIMPLE_UNESCAPE = functools.partial(
-    re.compile(r'\\(%s)' % COMPILED_MACROS['simple_escape'], re.I).sub,
+    regex.compile(r'\\(%s)' % COMPILED_MACROS['simple_escape'], regex.I | regex.V1).sub,
     # Same as r'\1', but faster on CPython
     operator.methodcaller('group', 1))
 
-FIND_NEWLINES = re.compile(COMPILED_MACROS['nl']).finditer
+FIND_NEWLINES = regex.compile(COMPILED_MACROS['nl'], regex.V1).finditer
 
 
 class Token(object):

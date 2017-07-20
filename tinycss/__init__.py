@@ -45,3 +45,15 @@ def make_parser(*features, **kwargs):
     else:
         parser_class = CSS21Parser
     return parser_class(**kwargs)
+
+
+import tinycss.color3
+import tinycss.css21
+import tinycss.decoding
+import tinycss.fonts3
+import tinycss.page3
+import tinycss.parsing
+import tinycss.token_data
+import tinycss.tokenizer
+import tinycss.tokenizer2
+import tinycss.version
